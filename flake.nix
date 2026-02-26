@@ -14,12 +14,18 @@
         # Version info from git if available
         version = if (self ? rev) then self.rev else "dev";
         shortRev = if (self ? shortRev) then self.shortRev else "dev";
+        # Use a fixed timestamp for reproducible builds, or 1970-01-01 as fallback
+        buildTime = if (self ? lastModifiedDate) then
+          pkgs.lib.substring 0 8 self.lastModifiedDate
+        else "19700101";
 
         # Linker flags to inject version info
         ldflags = [
           "-s" "-w"
           "-X github.com/sipeed/picoclaw/cmd/picoclaw/internal.version=${version}"
           "-X github.com/sipeed/picoclaw/cmd/picoclaw/internal.gitCommit=${shortRev}"
+          "-X github.com/sipeed/picoclaw/cmd/picoclaw/internal.buildTime=${buildTime}"
+          "-X github.com/sipeed/picoclaw/cmd/picoclaw/internal.goVersion=${pkgs.go.version}"
         ];
       in
       {
@@ -57,6 +63,16 @@
             golangci-lint
             gotools
           ];
+
+          # Automatically load .env file if it exists
+          shellHook = ''
+            if [ -f .env ]; then
+              echo "Loading environment variables from .env..."
+              set -a
+              source .env
+              set +a
+            fi
+          '';
         };
       }
     );
