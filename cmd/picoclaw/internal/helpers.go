@@ -19,6 +19,9 @@ var (
 )
 
 func GetConfigPath() string {
+	if envPath := os.Getenv("PICOCLAW_CONFIG_PATH"); envPath != "" {
+		return envPath
+	}
 	home, _ := os.UserHomeDir()
 	return filepath.Join(home, ".picoclaw", "config.json")
 }

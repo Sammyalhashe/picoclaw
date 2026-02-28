@@ -36,9 +36,13 @@
 
           # TODO: Update this hash after the first build failure
           # Run `nix build` and copy the expected hash from the error message
-          vendorHash = pkgs.lib.fakeHash;
+          vendorHash = "sha256-K3VY1oBTfb0suCHDYvR9zmSvXMNW31qiRH0R5BFsY9A=";
 
           subPackages = [ "cmd/picoclaw" ];
+
+          overrideModAttrs = (_: {
+            preBuild = "";
+          });
 
           # Run go generate to prepare embedded assets
           preBuild = ''
@@ -75,5 +79,12 @@
           '';
         };
       }
-    );
+    ) // {
+      overlays.default = final: prev: {
+        picoclaw = self.packages.${final.system}.default;
+      };
+      
+      homeManagerModules.picoclaw = import ./nix/modules/home-manager/picoclaw.nix;
+      homeManagerModules.default = self.homeManagerModules.picoclaw;
+    };
 }
